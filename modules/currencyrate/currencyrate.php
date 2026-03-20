@@ -12,6 +12,8 @@ if (file_exists($composerAutoload)) {
 }
 
 use CurrencyRate\Application\Module\ModuleRuntime;
+use CurrencyRate\Infrastructure\Database\PrestaShopDatabaseAdapter;
+use CurrencyRate\Infrastructure\Install\ModuleDatabaseInstaller;
 
 final class CurrencyRate extends Module
 {
@@ -43,8 +45,11 @@ final class CurrencyRate extends Module
             return false;
         }
 
-        $runtime = $this->getModuleRuntime();
-        if (!$runtime->install($this)) {
+        if (
+            !$this->registerHook('displayHeader')
+            || !$this->registerHook('displayProductAdditionalInfo')
+            || !$this->createModuleDatabaseInstaller()->install()
+        ) {
             return false;
         }
 
@@ -57,8 +62,7 @@ final class CurrencyRate extends Module
     {
         Configuration::deleteByName(self::DEBUG_LOG_ENABLED_KEY);
 
-        $runtime = $this->getModuleRuntime();
-        return $runtime->uninstall()
+        return $this->createModuleDatabaseInstaller()->uninstall()
             && parent::uninstall();
     }
 
@@ -83,5 +87,10 @@ final class CurrencyRate extends Module
         }
 
         return $runtime;
+    }
+
+    private function createModuleDatabaseInstaller(): ModuleDatabaseInstaller
+    {
+        return new ModuleDatabaseInstaller(new PrestaShopDatabaseAdapter());
     }
 }
