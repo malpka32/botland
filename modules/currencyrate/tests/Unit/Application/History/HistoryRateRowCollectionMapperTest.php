@@ -10,6 +10,7 @@ use CurrencyRate\Application\CurrencyProviderInterface;
 use CurrencyRate\Application\History\HistoryRateRowCollectionMapper;
 use CurrencyRate\Domain\Collection\HistoryRateRecordCollection;
 use CurrencyRate\Domain\Dto\Persistence\HistoryRateRecord;
+use CurrencyRate\Domain\Dto\Shop\HistoryRateRow;
 use PHPUnit\Framework\TestCase;
 
 final class HistoryRateRowCollectionMapperTest extends TestCase
@@ -31,9 +32,12 @@ final class HistoryRateRowCollectionMapperTest extends TestCase
 
         $mapped = (new HistoryRateRowCollectionMapper($resolver))->map($records);
 
-        self::assertSame(
-            [['effective_date' => '2026-03-20', 'iso_code' => 'EUR', 'currency_name' => 'EUR', 'mid' => 4.2]],
-            $mapped->toTemplateArray()
-        );
+        $rows = $mapped->toArray();
+        self::assertCount(1, $rows);
+        self::assertInstanceOf(HistoryRateRow::class, $rows[0]);
+        self::assertSame('2026-03-20', $rows[0]->effectiveDate());
+        self::assertSame('EUR', $rows[0]->isoCode());
+        self::assertSame('EUR', $rows[0]->currencyName());
+        self::assertSame(4.2, $rows[0]->mid());
     }
 }

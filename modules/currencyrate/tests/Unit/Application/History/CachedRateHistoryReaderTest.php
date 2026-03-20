@@ -97,32 +97,13 @@ final class CachedRateHistoryReaderTest extends TestCase
             ->method('storeForContext')
             ->with(4, 5, '2026-03-01', '2026-03-20', 'USD', $loadedCollection);
 
+        $loggedMessages = [];
         $logger = $this->createMock(DebugLoggerInterface::class);
         $logger->expects(self::exactly(2))
             ->method('log')
-            ->withConsecutive(
-                [
-                    'History cache miss',
-                    [
-                        'shop_id' => 4,
-                        'language_id' => 5,
-                        'date_from' => '2026-03-01',
-                        'date_to' => '2026-03-20',
-                        'currency' => 'USD',
-                    ],
-                ],
-                [
-                    'History cache stored',
-                    [
-                        'shop_id' => 4,
-                        'language_id' => 5,
-                        'rows_count' => 0,
-                        'date_from' => '2026-03-01',
-                        'date_to' => '2026-03-20',
-                        'currency' => 'USD',
-                    ],
-                ]
-            );
+            ->willReturnCallback(static function (string $message, array $context = []) use (&$loggedMessages): void {
+                $loggedMessages[] = [$message, $context];
+            });
 
         $reader = new CachedRateHistoryReader($innerReader, $cache, $logger);
 
@@ -130,5 +111,28 @@ final class CachedRateHistoryReaderTest extends TestCase
             $loadedCollection,
             $reader->findLastThirtyDays('2026-03-01', '2026-03-20', 'USD')
         );
+        self::assertSame([
+            [
+                'History cache miss',
+                [
+                    'shop_id' => 4,
+                    'language_id' => 5,
+                    'date_from' => '2026-03-01',
+                    'date_to' => '2026-03-20',
+                    'currency' => 'USD',
+                ],
+            ],
+            [
+                'History cache stored',
+                [
+                    'shop_id' => 4,
+                    'language_id' => 5,
+                    'rows_count' => 0,
+                    'date_from' => '2026-03-01',
+                    'date_to' => '2026-03-20',
+                    'currency' => 'USD',
+                ],
+            ],
+        ], $loggedMessages);
     }
 }

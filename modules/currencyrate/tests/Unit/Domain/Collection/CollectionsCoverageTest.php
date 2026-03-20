@@ -10,12 +10,12 @@ use CurrencyRate\Domain\Collection\NbpRateCollection;
 use CurrencyRate\Domain\Collection\NbpSeriesRateCollection;
 use CurrencyRate\Domain\Collection\NbpTableCollection;
 use CurrencyRate\Domain\Collection\ProductConvertedPriceCollection;
-use CurrencyRate\Domain\Dto\HistoryRateRow;
 use CurrencyRate\Domain\Dto\Api\NbpRate;
 use CurrencyRate\Domain\Dto\Api\NbpSeriesRate;
 use CurrencyRate\Domain\Dto\Api\NbpTable;
 use CurrencyRate\Domain\Dto\Persistence\HistoryRateRecord;
-use CurrencyRate\Domain\Dto\ProductConvertedPrice;
+use CurrencyRate\Domain\Dto\Shop\HistoryRateRow;
+use CurrencyRate\Domain\Dto\Shop\ProductConvertedPrice;
 use PHPUnit\Framework\TestCase;
 
 final class CollectionsCoverageTest extends TestCase
@@ -68,10 +68,7 @@ final class CollectionsCoverageTest extends TestCase
 
         self::assertSame(1, $collection->count());
         self::assertCount(1, iterator_to_array($collection));
-        self::assertSame(
-            [['effective_date' => '2026-03-20', 'iso_code' => 'EUR', 'currency_name' => 'Euro', 'mid' => 4.2]],
-            $collection->toTemplateArray()
-        );
+        self::assertSame([$row], $collection->toArray());
     }
 
     public function testProductConvertedPriceCollection(): void
@@ -82,10 +79,7 @@ final class CollectionsCoverageTest extends TestCase
 
         self::assertSame(1, $collection->count());
         self::assertCount(1, iterator_to_array($collection));
-        self::assertSame(
-            [['iso_code' => 'USD', 'name' => 'US Dollar', 'symbol' => '$', 'formatted_price' => '12.34 $']],
-            $collection->toTemplateArray()
-        );
+        self::assertSame([$row], $collection->toArray());
     }
 
     public function testHistoryRateRecordCollectionViaAbstractTypedCollection(): void

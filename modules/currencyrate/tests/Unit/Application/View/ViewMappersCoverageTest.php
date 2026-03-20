@@ -8,8 +8,8 @@ use CurrencyRate\Application\View\HistoryRateRowViewMapper;
 use CurrencyRate\Application\View\ProductConvertedPriceViewMapper;
 use CurrencyRate\Domain\Collection\HistoryRateRowCollection;
 use CurrencyRate\Domain\Collection\ProductConvertedPriceCollection;
-use CurrencyRate\Domain\Dto\HistoryRateRow;
-use CurrencyRate\Domain\Dto\ProductConvertedPrice;
+use CurrencyRate\Domain\Dto\Shop\HistoryRateRow;
+use CurrencyRate\Domain\Dto\Shop\ProductConvertedPrice;
 use PHPUnit\Framework\TestCase;
 
 final class ViewMappersCoverageTest extends TestCase

@@ -6,13 +6,11 @@ namespace CurrencyRate\Tests\Unit\Domain\Dto;
 
 use CurrencyRate\Domain\Collection\NbpRateCollection;
 use CurrencyRate\Domain\Collection\NbpSeriesRateCollection;
-use CurrencyRate\Domain\Dto\HistoryRateRow;
 use CurrencyRate\Domain\Dto\Api\NbpCurrencySeries;
 use CurrencyRate\Domain\Dto\Api\NbpRate;
 use CurrencyRate\Domain\Dto\Api\NbpSeriesRate;
 use CurrencyRate\Domain\Dto\Api\NbpTable;
 use CurrencyRate\Domain\Dto\Persistence\HistoryRateRecord;
-use CurrencyRate\Domain\Dto\ProductConvertedPrice;
 use CurrencyRate\Domain\Dto\Shop\HistoryRateRow as ShopHistoryRateRow;
 use CurrencyRate\Domain\Dto\Shop\ProductConvertedPrice as ShopProductConvertedPrice;
 use PHPUnit\Framework\TestCase;
@@ -58,28 +56,6 @@ final class DtoCoverageTest extends TestCase
 
     public function testViewDtosAndPersistenceDto(): void
     {
-        $historyRow = new HistoryRateRow('2026-03-20', 'EUR', 'Euro', 4.2);
-        self::assertSame(
-            [
-                'effective_date' => '2026-03-20',
-                'iso_code' => 'EUR',
-                'currency_name' => 'Euro',
-                'mid' => 4.2,
-            ],
-            $historyRow->toTemplateArray()
-        );
-
-        $convertedPrice = new ProductConvertedPrice('USD', 'US Dollar', '$', '12.34 $');
-        self::assertSame(
-            [
-                'iso_code' => 'USD',
-                'name' => 'US Dollar',
-                'symbol' => '$',
-                'formatted_price' => '12.34 $',
-            ],
-            $convertedPrice->toTemplateArray()
-        );
-
         $record = new HistoryRateRecord('2026-03-20', 'EUR', 4.2);
         self::assertSame('2026-03-20', $record->effectiveDate());
         self::assertSame('EUR', $record->isoCode());

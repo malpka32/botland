@@ -40,6 +40,7 @@ if (!class_exists('Context')) {
     final class Context
     {
         public object $language;
+        public mixed $shop = null;
         public mixed $currency = null;
         public mixed $currentLocale = null;
         private static ?self $instance = null;

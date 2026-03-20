@@ -17,18 +17,20 @@ final class CurrencyRateDebugLoggerTest extends TestCase
 
     public function testIsEnabledReflectsConfiguration(): void
     {
+        $logger = new CurrencyRateDebugLogger();
         \Configuration::$values[CurrencyRateDebugLogger::DEBUG_ENABLED_KEY] = '1';
-        self::assertTrue(CurrencyRateDebugLogger::isEnabled());
+        self::assertTrue($logger->isEnabled());
 
         \Configuration::$values[CurrencyRateDebugLogger::DEBUG_ENABLED_KEY] = '0';
-        self::assertFalse(CurrencyRateDebugLogger::isEnabled());
+        self::assertFalse($logger->isEnabled());
     }
 
     public function testLogWritesEntryWhenEnabled(): void
     {
+        $logger = new CurrencyRateDebugLogger();
         \Configuration::$values[CurrencyRateDebugLogger::DEBUG_ENABLED_KEY] = '1';
 
-        CurrencyRateDebugLogger::log('message', ['iso' => 'EUR']);
+        $logger->log('message', ['iso' => 'EUR']);
 
         self::assertCount(1, \PrestaShopLogger::$entries);
         self::assertStringContainsString('[currencyrate][debug] message', \PrestaShopLogger::$entries[0]['message']);
@@ -37,9 +39,10 @@ final class CurrencyRateDebugLoggerTest extends TestCase
 
     public function testLogDoesNothingWhenDisabled(): void
     {
+        $logger = new CurrencyRateDebugLogger();
         \Configuration::$values[CurrencyRateDebugLogger::DEBUG_ENABLED_KEY] = '0';
 
-        CurrencyRateDebugLogger::log('message');
+        $logger->log('message');
 
         self::assertSame([], \PrestaShopLogger::$entries);
     }
