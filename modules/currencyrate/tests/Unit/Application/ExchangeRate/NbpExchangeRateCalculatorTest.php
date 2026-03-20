@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace CurrencyRate\Tests\Unit\Application\ExchangeRate;
 
 use CurrencyRate\Application\ExchangeRate\NbpExchangeRateCalculator;
-use CurrencyRate\Application\ExchangeRate\PlnRateLookupStrategyInterface;
+use CurrencyRate\Application\ExchangeRate\Lookup\PlnRateLookupResolverInterface;
 use PHPUnit\Framework\TestCase;
 
 final class NbpExchangeRateCalculatorTest extends TestCase
 {
     public function testResolvePlnPerCurrencyReturnsZeroForMissingRate(): void
     {
-        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupStrategyInterface {
+        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupResolverInterface {
             public function resolve(string $isoCode): ?float
             {
                 return null;
@@ -24,7 +24,7 @@ final class NbpExchangeRateCalculatorTest extends TestCase
 
     public function testResolvePlnPerCurrencyReturnsZeroForNonPositiveRate(): void
     {
-        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupStrategyInterface {
+        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupResolverInterface {
             public function resolve(string $isoCode): ?float
             {
                 return 0.0;
@@ -36,7 +36,7 @@ final class NbpExchangeRateCalculatorTest extends TestCase
 
     public function testCalculatePrestaConversionRateReturnsOneForSameCurrency(): void
     {
-        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupStrategyInterface {
+        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupResolverInterface {
             public function resolve(string $isoCode): ?float
             {
                 return 4.22;
@@ -48,7 +48,7 @@ final class NbpExchangeRateCalculatorTest extends TestCase
 
     public function testCalculatePrestaConversionRateReturnsNullWhenTargetRateCannotBeResolved(): void
     {
-        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupStrategyInterface {
+        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupResolverInterface {
             public function resolve(string $isoCode): ?float
             {
                 return null;
@@ -60,7 +60,7 @@ final class NbpExchangeRateCalculatorTest extends TestCase
 
     public function testCalculatePrestaConversionRateCalculatesExpectedRatio(): void
     {
-        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupStrategyInterface {
+        $calculator = new NbpExchangeRateCalculator(new class implements PlnRateLookupResolverInterface {
             public function resolve(string $isoCode): ?float
             {
                 return match (strtoupper($isoCode)) {

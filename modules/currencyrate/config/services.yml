@@ -1,60 +1,159 @@
 services:
   _defaults:
     public: true
+    autoconfigure: false
     autowire: true
 
-  CurrencyRate\Infrastructure\Http\NbpHttpClient: ~
-  CurrencyRate\Infrastructure\Endpoint\LastTableEndpoint: ~
-  CurrencyRate\Infrastructure\Endpoint\TableRangeEndpoint: ~
-  CurrencyRate\Infrastructure\Endpoint\CurrencySeriesEndpoint: ~
-  CurrencyRate\Infrastructure\Mapper\NbpTableMapper: ~
-  CurrencyRate\Infrastructure\Mapper\NbpCurrencySeriesMapper: ~
+  # Infrastructure
+  CurrencyRate\Infrastructure\Http\NbpHttpClient:
+    arguments:
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+      - '@?http_client'
+  CurrencyRate\Application\Log\DebugLoggerInterface: '@CurrencyRate\Infrastructure\Log\CurrencyRateDebugLogger'
+  CurrencyRate\Infrastructure\Log\CurrencyRateDebugLogger: ~
+  CurrencyRate\Infrastructure\Database\DatabaseAdapterInterface: '@CurrencyRate\Infrastructure\Database\PrestaShopDatabaseAdapter'
+  CurrencyRate\Infrastructure\Database\PrestaShopDatabaseAdapter: ~
+  CurrencyRate\Application\History\HistoryRateRepositoryInterface: '@CurrencyRate\Infrastructure\Repository\PrestaShopHistoryRateRepository'
+  CurrencyRate\Infrastructure\Mapper\Db\HistoryRateRecordCollectionMapper: ~
+  CurrencyRate\Infrastructure\Repository\PrestaShopHistoryRateRepository: ~
+  CurrencyRate\Infrastructure\Install\ModuleDatabaseInstaller: ~
+  CurrencyRate\Infrastructure\Endpoint\NbpEndpointFactory: ~
+  CurrencyRate\Infrastructure\Mapper\Api\NbpTableMapper: ~
+  CurrencyRate\Infrastructure\Mapper\Api\NbpCurrencySeriesMapper: ~
 
+  # Exchange rate core flow (shared)
   CurrencyRate\Application\ExchangeRate\NbpApiGateway:
     arguments:
       - '@CurrencyRate\Infrastructure\Http\NbpHttpClient'
-      - '@CurrencyRate\Infrastructure\Endpoint\LastTableEndpoint'
-      - '@CurrencyRate\Infrastructure\Endpoint\TableRangeEndpoint'
-      - '@CurrencyRate\Infrastructure\Endpoint\CurrencySeriesEndpoint'
-      - '@CurrencyRate\Infrastructure\Mapper\NbpTableMapper'
-      - '@CurrencyRate\Infrastructure\Mapper\NbpCurrencySeriesMapper'
+      - '@CurrencyRate\Infrastructure\Endpoint\NbpEndpointFactory'
+      - '@CurrencyRate\Infrastructure\Mapper\Api\NbpTableMapper'
+      - '@CurrencyRate\Infrastructure\Mapper\Api\NbpCurrencySeriesMapper'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
 
   CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface: '@CurrencyRate\Application\ExchangeRate\NbpApiGateway'
-  currencyrate.nbp_rate_lookup_strategy.table_a:
-    class: CurrencyRate\Application\ExchangeRate\NbpTablePlnRateLookupStrategy
+  CurrencyRate\Application\ExchangeRate\Lookup\Pipeline\PlnRateLookupPipeline:
+    arguments:
+      - !tagged_iterator currencyrate.pln_rate_lookup_step
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+
+  currencyrate.pln_rate_lookup_step.latest_a:
+    class: CurrencyRate\Application\ExchangeRate\Lookup\Step\NbpLatestCurrencyRateLookupStep
     arguments:
       - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
       - 'A'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+    tags:
+      - { name: currencyrate.pln_rate_lookup_step, priority: 600 }
 
-  currencyrate.nbp_rate_lookup_strategy.table_b:
-    class: CurrencyRate\Application\ExchangeRate\NbpTablePlnRateLookupStrategy
+  currencyrate.pln_rate_lookup_step.latest_b:
+    class: CurrencyRate\Application\ExchangeRate\Lookup\Step\NbpLatestCurrencyRateLookupStep
     arguments:
       - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
       - 'B'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+    tags:
+      - { name: currencyrate.pln_rate_lookup_step, priority: 500 }
 
-  currencyrate.nbp_rate_lookup_strategy.fallback:
-    class: CurrencyRate\Application\ExchangeRate\FallbackPlnRateLookupStrategy
+  currencyrate.pln_rate_lookup_step.snapshot_a:
+    class: CurrencyRate\Application\ExchangeRate\Lookup\Step\NbpTableSnapshotRateLookupStep
     arguments:
-      - '@currencyrate.nbp_rate_lookup_strategy.table_a'
-      - '@currencyrate.nbp_rate_lookup_strategy.table_b'
+      - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
+      - 'A'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+    tags:
+      - { name: currencyrate.pln_rate_lookup_step, priority: 400 }
 
-  CurrencyRate\Application\ExchangeRate\PlnRateLookupStrategyInterface: '@currencyrate.nbp_rate_lookup_strategy.fallback'
+  currencyrate.pln_rate_lookup_step.snapshot_b:
+    class: CurrencyRate\Application\ExchangeRate\Lookup\Step\NbpTableSnapshotRateLookupStep
+    arguments:
+      - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
+      - 'B'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+    tags:
+      - { name: currencyrate.pln_rate_lookup_step, priority: 300 }
 
+  currencyrate.pln_rate_lookup_step.series_a:
+    class: CurrencyRate\Application\ExchangeRate\Lookup\Step\NbpCurrencySeriesRateLookupStep
+    arguments:
+      - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
+      - 'A'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+    tags:
+      - { name: currencyrate.pln_rate_lookup_step, priority: 200 }
+
+  currencyrate.pln_rate_lookup_step.series_b:
+    class: CurrencyRate\Application\ExchangeRate\Lookup\Step\NbpCurrencySeriesRateLookupStep
+    arguments:
+      - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
+      - 'B'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+    tags:
+      - { name: currencyrate.pln_rate_lookup_step, priority: 100 }
+
+  CurrencyRate\Application\ExchangeRate\Lookup\PlnRateLookupResolverInterface: '@CurrencyRate\Application\ExchangeRate\Lookup\Pipeline\PlnRateLookupPipeline'
   CurrencyRate\Application\ExchangeRate\NbpExchangeRateCalculator:
     arguments:
-      - '@CurrencyRate\Application\ExchangeRate\PlnRateLookupStrategyInterface'
+      - '@CurrencyRate\Application\ExchangeRate\Lookup\PlnRateLookupResolverInterface'
 
-  # Shared application services required by history sync
+  # Shared application services
   CurrencyRate\Application\ClockInterface: '@CurrencyRate\Application\SystemClock'
   CurrencyRate\Application\SystemClock: ~
   CurrencyRate\Application\CurrencyProviderInterface: '@CurrencyRate\Application\ShopCurrencyProvider'
   CurrencyRate\Application\ShopCurrencyProvider: ~
   CurrencyRate\Application\CurrencyNameResolver: ~
   CurrencyRate\Application\CurrencyDisplayNameByIsoResolver: ~
+  CurrencyRate\Application\Module\ModuleRuntime: ~
+  CurrencyRate\Application\Product\ProductBasePriceProvider: ~
+  CurrencyRate\Application\Product\CurrencyMultiplierResolver: ~
+  CurrencyRate\Application\Product\LocalizedPriceFormatter: ~
+  CurrencyRate\Application\ProductRateTableBuilder:
+    arguments:
+      - '@CurrencyRate\Application\CurrencyProviderInterface'
+      - '@CurrencyRate\Application\CurrencyNameResolver'
+      - '@CurrencyRate\Application\Product\ProductBasePriceProvider'
+      - '@CurrencyRate\Application\Product\CurrencyMultiplierResolver'
+      - '@CurrencyRate\Application\Product\LocalizedPriceFormatter'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+  CurrencyRate\Application\View\ProductConvertedPriceViewMapper: ~
+  CurrencyRate\Application\Hook\HookRegistry:
+    arguments:
+      - !tagged_iterator currencyrate.hook_handler
+
+  CurrencyRate\Application\Hook\DisplayHeaderHook:
+    tags:
+      - { name: currencyrate.hook_handler }
+
+  CurrencyRate\Application\Hook\DisplayProductAdditionalInfoHook:
+    tags:
+      - { name: currencyrate.hook_handler }
+
+  CurrencyRate\Application\Cache\CurrencyRatesSnapshotCacheInterface: '@CurrencyRate\Application\Cache\CurrencyRatesSnapshotCache'
+  CurrencyRate\Application\Cache\CurrencyRatesSnapshotCache: ~
+  CurrencyRate\Application\Cache\RateHistoryCacheInterface: '@CurrencyRate\Application\Cache\RateHistoryCache'
+  CurrencyRate\Application\Cache\RateHistoryCache: ~
+
+  # Shared sync dependencies (used by admin synchronizer)
+  currencyrate.history.fetch.handler.table_b:
+    class: CurrencyRate\Application\History\Fetch\Handler\FetchTableBRangeHandler
+    arguments:
+      - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
+
+  currencyrate.history.fetch.handler.table_a:
+    class: CurrencyRate\Application\History\Fetch\Handler\FetchTableARangeHandler
+    arguments:
+      - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+      - '@currencyrate.history.fetch.handler.table_b'
+
+  CurrencyRate\Application\History\HistoryTablesFetcher:
+    arguments:
+      - '@CurrencyRate\Application\CurrencyProviderInterface'
+      - '@currencyrate.history.fetch.handler.table_a'
 
   CurrencyRate\Application\History\RateHistoryWriter: ~
   CurrencyRate\Application\ExchangeRate\CurrencyRateUpdater: ~
 
+  # PrestaShop core override
   prestashop.core.exchange_rate.provider:
     class: CurrencyRate\PrestaShop\Core\Currency\NbpExchangeRateProvider
     arguments:

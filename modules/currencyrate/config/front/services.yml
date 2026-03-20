@@ -9,7 +9,12 @@ services:
 
   # History listing (FO controller)
   CurrencyRate\Application\History\RateHistoryReader: ~
-  CurrencyRate\Application\History\RateHistoryReaderInterface: '@CurrencyRate\Application\History\RateHistoryReader'
+  CurrencyRate\Application\History\CachedRateHistoryReader:
+    arguments:
+      - '@CurrencyRate\Application\History\RateHistoryReader'
+      - '@CurrencyRate\Application\Cache\RateHistoryCacheInterface'
+      - '@CurrencyRate\Application\Log\DebugLoggerInterface'
+  CurrencyRate\Application\History\RateHistoryReaderInterface: '@CurrencyRate\Application\History\CachedRateHistoryReader'
   CurrencyRate\Application\History\HistoryRateRowCollectionMapper: ~
   CurrencyRate\Application\History\HistoryViewProvider: ~
 

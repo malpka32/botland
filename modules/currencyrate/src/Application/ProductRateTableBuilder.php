@@ -4,14 +4,23 @@ declare(strict_types=1);
 
 namespace CurrencyRate\Application;
 
+use CurrencyRate\Application\Log\DebugLoggerInterface;
+use CurrencyRate\Application\Product\CurrencyMultiplierResolver;
+use CurrencyRate\Application\Product\LocalizedPriceFormatter;
+use CurrencyRate\Application\Product\ProductBasePriceProvider;
+use CurrencyRate\Application\Support\CurrencyIsoCode;
 use CurrencyRate\Domain\Collection\ProductConvertedPriceCollection;
-use CurrencyRate\Domain\Dto\ProductConvertedPrice;
+use CurrencyRate\Domain\Dto\Shop\ProductConvertedPrice;
 
 final class ProductRateTableBuilder
 {
     public function __construct(
         private CurrencyProviderInterface $shopCurrencyProvider,
-        private CurrencyNameResolver $currencyNameResolver
+        private CurrencyNameResolver $currencyNameResolver,
+        private ProductBasePriceProvider $productBasePriceProvider,
+        private CurrencyMultiplierResolver $currencyMultiplierResolver,
+        private LocalizedPriceFormatter $priceFormatter,
+        private DebugLoggerInterface $logger
     ) {
     }
 
@@ -21,75 +30,69 @@ final class ProductRateTableBuilder
     ): ProductConvertedPriceCollection
     {
         $collection = new ProductConvertedPriceCollection();
-        if ($productId <= 0) {
+        $basePrice = $this->productBasePriceProvider->getBasePriceInDefaultCurrency($productId, $productAttributeId);
+        if ($basePrice === null) {
             return $collection;
         }
+        $selectedCurrencyId = $this->resolveSelectedCurrencyId();
 
-        $context = \Context::getContext();
         $defaultCurrency = \Currency::getDefaultCurrency();
         if (!$defaultCurrency instanceof \Currency) {
+            $this->logger->log('Product conversion table aborted: no default currency');
             return $collection;
         }
 
-        $originalCurrency = $context->currency;
-        $context->currency = $defaultCurrency;
-        $specificPriceOutput = null;
-
-        try {
-            $basePrice = \Product::getPriceStatic(
-                $productId,
-                true,
-                $productAttributeId,
-                6,
-                null,
-                false,
-                true,
-                1,
-                false,
-                null,
-                null,
-                null,
-                $specificPriceOutput,
-                true,
-                true,
-                $context
-            );
-        } finally {
-            $context->currency = $originalCurrency;
+        $activeCurrencies = $this->shopCurrencyProvider->getActiveCurrenciesIndexedByIsoCode();
+        $defaultRate = (float) $defaultCurrency->conversion_rate;
+        if ($defaultRate <= 0.0) {
+            $this->logger->log('Product conversion table aborted: invalid default conversion rate', [
+                'default_rate' => $defaultRate,
+            ]);
+            return $collection;
         }
 
-        foreach ($this->shopCurrencyProvider->getActiveCurrenciesIndexedByIsoCode() as $currency) {
-            if (!$currency instanceof \Currency) {
+        foreach ($activeCurrencies as $targetCurrency) {
+            if (!$targetCurrency instanceof \Currency) {
                 continue;
             }
 
-            if ($originalCurrency instanceof \Currency && (int) $currency->id === (int) $originalCurrency->id) {
+            $targetIsoCode = CurrencyIsoCode::normalize((string) $targetCurrency->iso_code);
+            $currencyId = (int) $targetCurrency->id;
+            if ($currencyId <= 0) {
                 continue;
             }
 
-            $convertedPrice = \Tools::convertPriceFull((float) $basePrice, $defaultCurrency, $currency);
+            if ($currencyId === $selectedCurrencyId) {
+                continue;
+            }
+
+            $multiplier = $this->currencyMultiplierResolver->resolveForCurrency($targetCurrency, $defaultRate);
+            if ($multiplier <= 0.0) {
+                continue;
+            }
+
+            $convertedPrice = (float) $basePrice * $multiplier;
             $collection->add(
                 new ProductConvertedPrice(
-                    strtoupper((string) $currency->iso_code),
-                    $this->currencyNameResolver->resolve($currency),
-                    (string) $currency->symbol,
-                    $this->formatPrice($convertedPrice, $currency)
+                    $targetIsoCode,
+                    $this->currencyNameResolver->resolve($targetCurrency),
+                    (string) $targetCurrency->symbol,
+                    $this->priceFormatter->format(
+                        $convertedPrice,
+                        $targetIsoCode,
+                        (string) $targetCurrency->symbol
+                    )
                 )
             );
         }
 
         return $collection;
     }
-    private function formatPrice(float $price, \Currency $currency): string
-    {
-        $context = \Context::getContext();
-        if (method_exists($context, 'getCurrentLocale')) {
-            $locale = $context->getCurrentLocale();
-            if ($locale !== null && method_exists($locale, 'formatPrice')) {
-                return (string) $locale->formatPrice($price, (string) $currency->iso_code);
-            }
-        }
 
-        return number_format($price, 2, '.', ' ') . ' ' . (string) $currency->symbol;
+    private function resolveSelectedCurrencyId(): int
+    {
+        $selectedCurrency = \Context::getContext()->currency;
+
+        return $selectedCurrency instanceof \Currency ? (int) $selectedCurrency->id : 0;
     }
 }

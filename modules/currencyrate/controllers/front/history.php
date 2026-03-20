@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+use CurrencyRate\Application\History\HistoryViewProvider;
+use CurrencyRate\Application\View\HistoryRateRowViewMapper;
+
 class CurrencyRateHistoryModuleFrontController extends ModuleFrontController
 {
     private const DEFAULT_PER_PAGE = 20;
@@ -19,18 +22,26 @@ class CurrencyRateHistoryModuleFrontController extends ModuleFrontController
 
         /** @var CurrencyRate $module */
         $module = $this->module;
-        $historyProvider = $module->getHistoryViewProvider();
+        $historyProvider = $module->get(HistoryViewProvider::class);
+        if (!$historyProvider instanceof HistoryViewProvider) {
+            throw new \RuntimeException(sprintf('Service "%s" is not available.', HistoryViewProvider::class));
+        }
         $currencyOptions = $historyProvider->getCurrencyOptions();
         $allowedCurrencyCodes = array_map(static function (array $option): string {
             return (string) $option['iso_code'];
         }, $currencyOptions);
 
         $filters = $this->resolveFilters($allowedCurrencyCodes);
-        $rows = $historyProvider->getLastThirtyDays(
+        $rowsCollection = $historyProvider->getLastThirtyDays(
             $filters['date_from'],
             $filters['date_to'],
             $filters['currency']
-        )->toTemplateArray();
+        );
+        $historyRateRowViewMapper = $module->get(HistoryRateRowViewMapper::class);
+        if (!$historyRateRowViewMapper instanceof HistoryRateRowViewMapper) {
+            throw new \RuntimeException(sprintf('Service "%s" is not available.', HistoryRateRowViewMapper::class));
+        }
+        $rows = $historyRateRowViewMapper->mapCollection($rowsCollection);
         $totalItems = count($rows);
         $perPage = self::DEFAULT_PER_PAGE;
         $pagesCount = max(1, (int) ceil($totalItems / $perPage));
@@ -62,10 +73,6 @@ class CurrencyRateHistoryModuleFrontController extends ModuleFrontController
                 'module:currencyrate/views/templates/front/_partials/history-bottom.tpl'
             );
 
-            $renderedTop = $this->ensureContainer($renderedTop, 'js-product-list-top');
-            $renderedList = $this->ensureContainer($renderedList, 'js-product-list');
-            $renderedBottom = $this->ensureContainer($renderedBottom, 'js-product-list-bottom');
-
             $payload = json_encode([
                 'current_url' => $this->updateQueryString(['from-xhr' => null]),
                 'rendered_products_top' => $renderedTop,
@@ -75,20 +82,9 @@ class CurrencyRateHistoryModuleFrontController extends ModuleFrontController
 
             $this->ajaxRender((string) $payload);
             exit;
-
-            return;
         }
 
         $this->setTemplate('module:currencyrate/views/templates/front/history.tpl');
-    }
-
-    private function ensureContainer(string $html, string $containerId): string
-    {
-        if (strpos($html, 'id="' . $containerId . '"') !== false) {
-            return $html;
-        }
-
-        return sprintf('<div id="%s">%s</div>', $containerId, $html);
     }
 
     /**
@@ -98,24 +94,24 @@ class CurrencyRateHistoryModuleFrontController extends ModuleFrontController
      */
     private function resolveFilters(array $allowedCurrencyCodes): array
     {
-        $defaultDateFrom = (new \DateTimeImmutable('-30 days'))->format('Y-m-d');
-        $defaultDateTo = (new \DateTimeImmutable('today'))->format('Y-m-d');
+        $defaultDateTo = \CurrencyRate\Application\History\HistoryDateRange::today();
+        $defaultDateFrom = \CurrencyRate\Application\History\HistoryDateRange::defaultStartDateFrom($defaultDateTo);
 
         $dateFrom = $this->sanitizeDate((string) Tools::getValue('date_from', ''));
         $dateTo = $this->sanitizeDate((string) Tools::getValue('date_to', ''));
 
         if ($dateFrom === null) {
-            $dateFrom = $defaultDateFrom;
+            $dateFrom = $defaultDateFrom->format('Y-m-d');
         }
         if ($dateTo === null) {
-            $dateTo = $defaultDateTo;
+            $dateTo = $defaultDateTo->format('Y-m-d');
         }
 
         if ($dateFrom !== null && $dateTo !== null && $dateFrom > $dateTo) {
             [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
         }
 
-        $currency = strtoupper(trim((string) Tools::getValue('currency', '')));
+        $currency = \CurrencyRate\Application\Support\CurrencyIsoCode::normalize((string) Tools::getValue('currency', ''));
         if ($currency === '' || !in_array($currency, $allowedCurrencyCodes, true)) {
             $currency = null;
         }

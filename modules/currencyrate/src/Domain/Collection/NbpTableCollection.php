@@ -4,37 +4,20 @@ declare(strict_types=1);
 
 namespace CurrencyRate\Domain\Collection;
 
-use Countable;
-use CurrencyRate\Domain\Dto\NbpTable;
-use IteratorAggregate;
-use ArrayIterator;
-use Traversable;
+use CurrencyRate\Domain\Dto\Api\NbpTable;
 
-final class NbpTableCollection implements IteratorAggregate, Countable
+/**
+ * @extends AbstractTypedCollection<NbpTable>
+ */
+final class NbpTableCollection extends AbstractTypedCollection
 {
-    /** @var list<NbpTable> */
-    private array $items = [];
-
     public function add(NbpTable $table): void
     {
-        $this->items[] = $table;
-    }
-
-    public function count(): int
-    {
-        return count($this->items);
+        $this->addItem($table);
     }
 
     public function first(): ?NbpTable
     {
         return $this->items[0] ?? null;
-    }
-
-    /**
-     * @return Traversable<int, NbpTable>
-     */
-    public function getIterator(): Traversable
-    {
-        return new ArrayIterator($this->items);
     }
 }

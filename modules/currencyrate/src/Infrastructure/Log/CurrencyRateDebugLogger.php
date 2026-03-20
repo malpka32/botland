@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace CurrencyRate\Infrastructure\Log;
 
-final class CurrencyRateDebugLogger
+use CurrencyRate\Application\Log\DebugLoggerInterface;
+
+final class CurrencyRateDebugLogger implements DebugLoggerInterface
 {
     public const DEBUG_ENABLED_KEY = 'CURRENCYRATE_DEBUG_LOG_ENABLED';
 
     /**
      * @param array<string, mixed> $context
      */
-    public static function log(string $message, array $context = []): void
+    public function log(string $message, array $context = []): void
     {
-        if (!self::isEnabled()) {
+        if (!$this->isEnabled()) {
             return;
         }
 
@@ -26,7 +28,7 @@ final class CurrencyRateDebugLogger
         \PrestaShopLogger::addLog('[currencyrate][debug] ' . $message . $suffix, 1);
     }
 
-    public static function isEnabled(): bool
+    public function isEnabled(): bool
     {
         return (string) \Configuration::get(self::DEBUG_ENABLED_KEY) === '1';
     }

@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace CurrencyRate\Application\ExchangeRate;
 
+use CurrencyRate\Application\ExchangeRate\Lookup\PlnRateLookupResolverInterface;
+use CurrencyRate\Application\Support\CurrencyIsoCode;
+
 final class NbpExchangeRateCalculator
 {
-    public function __construct(private PlnRateLookupStrategyInterface $plnRateLookupStrategy)
+    public function __construct(private PlnRateLookupResolverInterface $plnRateLookupResolver)
     {
     }
 
     public function resolvePlnPerCurrency(string $isoCode): float
     {
-        $rate = $this->plnRateLookupStrategy->resolve($isoCode);
+        $rate = $this->plnRateLookupResolver->resolve($isoCode);
         if ($rate === null || $rate <= 0.0) {
             return 0.0;
         }
@@ -30,8 +33,8 @@ final class NbpExchangeRateCalculator
         string $defaultIsoCode,
         float $plnPerDefault
     ): ?float {
-        $targetIsoCode = strtoupper($targetIsoCode);
-        $defaultIsoCode = strtoupper($defaultIsoCode);
+        $targetIsoCode = CurrencyIsoCode::normalize($targetIsoCode);
+        $defaultIsoCode = CurrencyIsoCode::normalize($defaultIsoCode);
 
         if ($targetIsoCode === $defaultIsoCode) {
             return 1.0;

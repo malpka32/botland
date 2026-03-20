@@ -4,25 +4,16 @@ declare(strict_types=1);
 
 namespace CurrencyRate\Domain\Collection;
 
-use Countable;
-use CurrencyRate\Domain\Dto\NbpSeriesRate;
-use IteratorAggregate;
-use ArrayIterator;
-use Traversable;
+use CurrencyRate\Domain\Dto\Api\NbpSeriesRate;
 
-final class NbpSeriesRateCollection implements IteratorAggregate, Countable
+/**
+ * @extends AbstractTypedCollection<NbpSeriesRate>
+ */
+final class NbpSeriesRateCollection extends AbstractTypedCollection
 {
-    /** @var list<NbpSeriesRate> */
-    private array $items = [];
-
     public function add(NbpSeriesRate $rate): void
     {
-        $this->items[] = $rate;
-    }
-
-    public function count(): int
-    {
-        return count($this->items);
+        $this->addItem($rate);
     }
 
     public function last(): ?NbpSeriesRate
@@ -32,13 +23,5 @@ final class NbpSeriesRateCollection implements IteratorAggregate, Countable
         }
 
         return $this->items[array_key_last($this->items)];
-    }
-
-    /**
-     * @return Traversable<int, NbpSeriesRate>
-     */
-    public function getIterator(): Traversable
-    {
-        return new ArrayIterator($this->items);
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CurrencyRate\PrestaShop\Core\Currency;
 
+use CurrencyRate\Application\Support\CurrencyIsoCode;
 use CurrencyRate\Application\ExchangeRate\NbpExchangeRateCalculator;
 use PrestaShop\CircuitBreaker\Contract\CircuitBreakerInterface;
 use PrestaShop\Decimal\DecimalNumber;
@@ -18,11 +19,18 @@ final class NbpExchangeRateProvider extends ExchangeRateProvider
     public function __construct(
         string $currencyFeedUrl,
         string $defaultCurrencyIsoCode,
-        CircuitBreakerInterface $remoteServiceProvider,
-        CacheInterface $cache,
-        private NbpExchangeRateCalculator $nbpExchangeRateCalculator
+        CircuitBreakerInterface $remoteServiceProvider = new PassThroughCircuitBreaker(),
+        CacheInterface $cache = new ArrayAdapter(),
+        private NbpExchangeRateCalculator $nbpExchangeRateCalculator,
+        private string $shopDefaultCurrencyIsoCode = ''
     ) {
-        parent::__construct($currencyFeedUrl, $defaultCurrencyIsoCode, $remoteServiceProvider, $cache);
+        $this->shopDefaultCurrencyIsoCode = CurrencyIsoCode::normalize($defaultCurrencyIsoCode);
+        parent::__construct(
+            $currencyFeedUrl,
+            $defaultCurrencyIsoCode,
+            $remoteServiceProvider,
+            $cache
+        );
     }
 
     /**
@@ -36,7 +44,7 @@ final class NbpExchangeRateProvider extends ExchangeRateProvider
             return parent::getExchangeRate($currencyIsoCode);
         }
 
-        $targetIsoCode = strtoupper((string) $currencyIsoCode);
+        $targetIsoCode = CurrencyIsoCode::normalize((string) $currencyIsoCode);
         if ($targetIsoCode === self::DEFAULT_SHOP_CURRENCY_ISO) {
             return new DecimalNumber('1.0');
         }
@@ -64,11 +72,6 @@ final class NbpExchangeRateProvider extends ExchangeRateProvider
 
     private function isDefaultCurrencyPln(): bool
     {
-        $defaultCurrency = \Currency::getDefaultCurrency();
-        $defaultIsoCode = $defaultCurrency instanceof \Currency
-            ? strtoupper((string) $defaultCurrency->iso_code)
-            : '';
-
-        return $defaultIsoCode === self::DEFAULT_SHOP_CURRENCY_ISO;
+        return $this->shopDefaultCurrencyIsoCode === self::DEFAULT_SHOP_CURRENCY_ISO;
     }
 }

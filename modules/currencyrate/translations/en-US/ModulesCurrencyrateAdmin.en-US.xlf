@@ -38,6 +38,10 @@
         <source>Save settings</source>
         <target>Save settings</target>
       </trans-unit>
+      <trans-unit id="6a26f548831e6a8c26bfbbd9f6ec61e0">
+        <source>Help</source>
+        <target>Help</target>
+      </trans-unit>
       <trans-unit id="df9e37dc439e6c24334334d1ee92efe2">
         <source>Currency Rate module help</source>
         <target>Currency Rate module help</target>
@@ -61,6 +65,22 @@
       <trans-unit id="cbdccc75cbfb745f33dc57ced07a4267">
         <source>Open PrestaShop documentation for CRON currency refresh</source>
         <target>Open PrestaShop documentation for CRON currency refresh</target>
+      </trans-unit>
+      <trans-unit id="7854585cdb830e3880eba7f98f140b4d">
+        <source>Manage module settings and trigger a manual synchronization of exchange rates history.</source>
+        <target>Manage module settings and trigger a manual synchronization of exchange rates history.</target>
+      </trans-unit>
+      <trans-unit id="65b849a361f21284abc6df2a7437965c">
+        <source>Debug settings</source>
+        <target>Debug settings</target>
+      </trans-unit>
+      <trans-unit id="e2fcc6786c7451aa5d46de60dd6f70a1">
+        <source>Manual synchronization</source>
+        <target>Manual synchronization</target>
+      </trans-unit>
+      <trans-unit id="1c74348ef05e8d1ebdb938731395a486">
+        <source>Download and update currency rates history for the last 30 days.</source>
+        <target>Download and update currency rates history for the last 30 days.</target>
       </trans-unit>
     </body>
   </file>

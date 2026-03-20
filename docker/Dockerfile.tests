@@ -2,6 +2,8 @@ FROM php:8.4-cli-bookworm
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl \
+    && pecl install pcov \
+    && docker-php-ext-enable pcov \
     && curl -fsSL https://phar.phpunit.de/phpunit-11.phar -o /usr/local/bin/phpunit \
     && chmod +x /usr/local/bin/phpunit \
     && phpunit --version \

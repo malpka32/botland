@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace CurrencyRate\Tests\Unit\Domain\Collection;
 
 use CurrencyRate\Domain\Collection\NbpRateCollection;
-use CurrencyRate\Domain\Dto\NbpRate;
+use CurrencyRate\Domain\Dto\Api\NbpRate;
 use PHPUnit\Framework\TestCase;
 
 final class NbpRateCollectionTest extends TestCase

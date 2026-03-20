@@ -57,7 +57,7 @@ final class ConfigController extends FrameworkBundleAdminController
 
         if ($request->request->has('submitCurrencyRateSync')) {
             try {
-                $this->rateHistorySynchronizer->syncLastThirtyDays();
+                $this->rateHistorySynchronizer->syncHistoryLastThirtyDays();
 
                 return $this->redirectToRoute('currencyrate_admin_config', ['sync_status' => 'success']);
             } catch (\Throwable $exception) {

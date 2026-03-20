@@ -5,6 +5,15 @@
     bootstrap="tests/bootstrap.php"
     colors="true"
 >
+    <source>
+        <include>
+            <directory>src/Domain</directory>
+            <directory>src/Infrastructure/Endpoint</directory>
+            <directory>src/Infrastructure/Log</directory>
+            <directory>src/Infrastructure/Mapper/Api</directory>
+            <directory>src/Infrastructure/Mapper/Db</directory>
+        </include>
+    </source>
     <testsuites>
         <testsuite name="CurrencyRate Unit">
             <directory>tests/Unit</directory>

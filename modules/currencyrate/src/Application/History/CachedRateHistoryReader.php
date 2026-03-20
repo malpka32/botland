@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace CurrencyRate\Application\History;
 
+use CurrencyRate\Application\Cache\RateHistoryCacheInterface;
+use CurrencyRate\Application\Log\DebugLoggerInterface;
 use CurrencyRate\Domain\Collection\HistoryRateRowCollection;
-use CurrencyRate\Infrastructure\Log\CurrencyRateDebugLogger;
 
 final class CachedRateHistoryReader implements RateHistoryReaderInterface
 {
-    private const CACHE_TTL_SECONDS = 300;
-
-    public function __construct(private RateHistoryReaderInterface $innerReader)
-    {
+    public function __construct(
+        private RateHistoryReaderInterface $innerReader,
+        private RateHistoryCacheInterface $cache,
+        private DebugLoggerInterface $logger
+    ) {
     }
 
     public function findLastThirtyDays(
@@ -21,44 +23,53 @@ final class CachedRateHistoryReader implements RateHistoryReaderInterface
         ?string $currencyIsoCode = null
     ): HistoryRateRowCollection {
         $context = \Context::getContext();
-        $shopId = (int) $context->shop->id;
-        $languageId = (int) $context->language->id;
-        $cacheKey = 'currencyrate_history_' . $shopId . '_' . $languageId . '_' . md5(
-            implode('|', [$dateFrom ?? '', $dateTo ?? '', $currencyIsoCode ?? ''])
-        );
-
-        $cache = \Cache::getInstance();
-        // if ($cache !== null) {
-        //     if ($cached instanceof HistoryRateRowCollection) {
-        //         CurrencyRateDebugLogger::log('History cache hit', [
-        //             'cache_key' => $cacheKey,
-        //             'source' => 'prestashop_backend',
-        //         ]);
-
-        //         return $cached;
-        //     }
-        // }
-
-        if (\Cache::isStored($cacheKey)) {
-            CurrencyRateDebugLogger::log('History cache hit', [
-                'cache_key' => $cacheKey,
-                'source' => 'request_local',
+        $shopId = isset($context->shop) ? (int) $context->shop->id : 0;
+        $languageId = isset($context->language) ? (int) $context->language->id : 0;
+        if ($shopId <= 0 || $languageId <= 0) {
+            $this->logger->log('History cache bypassed: missing context identifiers', [
+                'shop_id' => $shopId,
+                'language_id' => $languageId,
             ]);
-            /** @var HistoryRateRowCollection $cached */
-            $cached = \Cache::retrieve($cacheKey);
+
+            return $this->innerReader->findLastThirtyDays($dateFrom, $dateTo, $currencyIsoCode);
+        }
+
+        $cached = $this->cache->getForContext(
+            $shopId,
+            $languageId,
+            $dateFrom,
+            $dateTo,
+            $currencyIsoCode
+        );
+        if ($cached instanceof HistoryRateRowCollection) {
+            $this->logger->log('History cache hit', [
+                'shop_id' => $shopId,
+                'language_id' => $languageId,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'currency' => $currencyIsoCode,
+            ]);
+
             return $cached;
         }
 
-        CurrencyRateDebugLogger::log('History cache miss', ['cache_key' => $cacheKey]);
+        $this->logger->log('History cache miss', [
+            'shop_id' => $shopId,
+            'language_id' => $languageId,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'currency' => $currencyIsoCode,
+        ]);
+
         $collection = $this->innerReader->findLastThirtyDays($dateFrom, $dateTo, $currencyIsoCode);
-        if ($cache !== null) {
-            $cache->set($cacheKey, $collection, self::CACHE_TTL_SECONDS);
-        }
-        \Cache::store($cacheKey, $collection);
-        CurrencyRateDebugLogger::log('History cache stored', [
-            'cache_key' => $cacheKey,
+        $this->cache->storeForContext($shopId, $languageId, $dateFrom, $dateTo, $currencyIsoCode, $collection);
+        $this->logger->log('History cache stored', [
+            'shop_id' => $shopId,
+            'language_id' => $languageId,
             'rows_count' => $collection->count(),
-            'ttl_seconds' => self::CACHE_TTL_SECONDS,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+            'currency' => $currencyIsoCode,
         ]);
 
         return $collection;

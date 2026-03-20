@@ -53,9 +53,22 @@ jobs:
       - name: Build ZIP artifact
         run: ./scripts/build-module-zip.sh
 
+      - name: Resolve artifact name
+        id: artifact_meta
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          zips=(dist/*.zip)
+          if [ "${#zips[@]}" -eq 0 ]; then
+            echo "No ZIP package found in dist/." >&2
+            exit 1
+          fi
+          artifact_name="$(basename "${zips[0]}" .zip)"
+          echo "artifact_name=${artifact_name}" >> "${GITHUB_OUTPUT}"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: currencyrate-zip
+          name: ${{ steps.artifact_meta.outputs.artifact_name }}
           path: dist/*.zip
           if-no-files-found: error

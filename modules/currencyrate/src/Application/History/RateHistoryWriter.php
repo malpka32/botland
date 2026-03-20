@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace CurrencyRate\Application\History;
 
+use CurrencyRate\Application\Cache\RateHistoryCacheInterface;
 use CurrencyRate\Application\ClockInterface;
 use CurrencyRate\Application\CurrencyProviderInterface;
+use CurrencyRate\Application\Log\DebugLoggerInterface;
+use CurrencyRate\Application\Support\CurrencyIsoCode;
 use CurrencyRate\Domain\Collection\NbpTableCollection;
-use CurrencyRate\Domain\Dto\NbpRate;
-use CurrencyRate\Domain\Dto\NbpTable;
-use CurrencyRate\Infrastructure\Log\CurrencyRateDebugLogger;
+use CurrencyRate\Domain\Dto\Api\NbpRate;
+use CurrencyRate\Domain\Dto\Api\NbpTable;
 
 final class RateHistoryWriter implements RateHistoryWriterInterface
 {
     public function __construct(
         private CurrencyProviderInterface $shopCurrencyProvider,
-        private ClockInterface $clock
+        private ClockInterface $clock,
+        private RateHistoryCacheInterface $rateHistoryCache,
+        private DebugLoggerInterface $logger,
+        private HistoryRateRepositoryInterface $historyRateRepository
     ) {
     }
 
@@ -24,29 +29,16 @@ final class RateHistoryWriter implements RateHistoryWriterInterface
         $supportedCurrencies = $this->shopCurrencyProvider->getActiveCurrenciesIndexedByIsoCode();
         $supportedIsoCodes = array_keys($supportedCurrencies);
         if ($supportedIsoCodes === []) {
-            CurrencyRateDebugLogger::log('History write aborted: no active currencies');
+            $this->logger->log('History write aborted: no active currencies');
             return;
         }
 
-        $escapedIsoList = implode(
-            ',',
-            array_map(
-                static fn (string $iso): string => "'" . pSQL($iso) . "'",
-                $supportedIsoCodes
-            )
-        );
-
-        $deleteSql = sprintf(
-            'DELETE FROM `%scurrencyrate_history` WHERE `effective_date` < "%s" OR `iso_code` NOT IN (%s)',
-            _DB_PREFIX_,
-            pSQL($cutoffDate->format('Y-m-d')),
-            $escapedIsoList
-        );
-        CurrencyRateDebugLogger::log('History cleanup query start', [
-            'cutoff_date' => $cutoffDate->format('Y-m-d'),
+        $cutoffDateString = $cutoffDate->format('Y-m-d');
+        $this->logger->log('History cleanup query start', [
+            'cutoff_date' => $cutoffDateString,
             'supported_currencies_count' => count($supportedIsoCodes),
         ]);
-        \Db::getInstance()->execute($deleteSql);
+        $this->historyRateRepository->cleanupHistory($cutoffDateString, $supportedIsoCodes);
 
         $now = $this->clock->now()->format('Y-m-d H:i:s');
         $writtenRows = 0;
@@ -60,31 +52,24 @@ final class RateHistoryWriter implements RateHistoryWriterInterface
                     continue;
                 }
 
-                $isoCode = strtoupper($rate->code());
+                $isoCode = CurrencyIsoCode::normalize($rate->code());
                 if (!isset($supportedCurrencies[$isoCode])) {
                     continue;
                 }
 
-                $data = [
-                    'iso_code' => pSQL($isoCode),
-                    'effective_date' => pSQL($table->effectiveDate()),
-                    'mid' => (float) $rate->mid(),
-                    'table_no' => pSQL($table->number()),
-                    'table_type' => pSQL($table->table()),
-                    'date_add' => $now,
-                    'date_upd' => $now,
-                ];
-
-                \Db::getInstance()->insert('currencyrate_history', $data, false, true, \Db::ON_DUPLICATE_KEY);
+                $this->historyRateRepository->upsertHistoryRow(
+                    $isoCode,
+                    $table->effectiveDate(),
+                    (float) $rate->mid(),
+                    $table->number(),
+                    $table->table(),
+                    $now
+                );
                 $writtenRows++;
             }
         }
 
-        $cache = \Cache::getInstance();
-        if ($cache !== null) {
-            $cache->delete('currencyrate_history_*');
-        }
-        \Cache::clean('currencyrate_history_*');
-        CurrencyRateDebugLogger::log('History write completed', ['written_rows' => $writtenRows]);
+        $this->rateHistoryCache->invalidateAll();
+        $this->logger->log('History write completed', ['written_rows' => $writtenRows]);
     }
 }

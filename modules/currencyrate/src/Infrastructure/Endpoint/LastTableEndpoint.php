@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace CurrencyRate\Infrastructure\Endpoint;
 
-final class LastTableEndpoint implements NbpEndpointInterface
+final class LastTableEndpoint
 {
     public function __construct(private string $tableType = 'A')
     {

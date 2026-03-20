@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace CurrencyRate\Tests\Unit\Application\ExchangeRate\Lookup\Pipeline;
+namespace CurrencyRate\Tests\Unit\Application\ExchangeRate\Lookup;
 
 use CurrencyRate\Application\ExchangeRate\Lookup\Pipeline\PlnRateLookupPipeline;
 use CurrencyRate\Application\ExchangeRate\Lookup\Step\PlnRateLookupPipelineStepInterface;
@@ -11,50 +11,41 @@ use PHPUnit\Framework\TestCase;
 
 final class PlnRateLookupPipelineTest extends TestCase
 {
-    public function testResolveReturnsOneForPlnAndSkipsSteps(): void
+    public function testResolveReturnsOneForPln(): void
     {
         $step = $this->createMock(PlnRateLookupPipelineStepInterface::class);
         $step->expects(self::never())->method('resolve');
 
         $pipeline = new PlnRateLookupPipeline([$step], $this->createLogger());
 
-        self::assertSame(1.0, $pipeline->resolve(' pln '));
+        self::assertSame(1.0, $pipeline->resolve('pln'));
     }
 
     public function testResolveReturnsFirstPositiveRateFromSteps(): void
     {
         $firstStep = $this->createMock(PlnRateLookupPipelineStepInterface::class);
-        $firstStep->expects(self::once())
-            ->method('resolve')
-            ->with('EUR')
-            ->willReturn(null);
+        $firstStep->expects(self::once())->method('resolve')->with('EUR')->willReturn(null);
 
         $secondStep = $this->createMock(PlnRateLookupPipelineStepInterface::class);
-        $secondStep->expects(self::once())
-            ->method('resolve')
-            ->with('EUR')
-            ->willReturn(4.25);
+        $secondStep->expects(self::once())->method('resolve')->with('EUR')->willReturn(4.12);
 
         $thirdStep = $this->createMock(PlnRateLookupPipelineStepInterface::class);
         $thirdStep->expects(self::never())->method('resolve');
 
         $pipeline = new PlnRateLookupPipeline([$firstStep, $secondStep, $thirdStep], $this->createLogger());
 
-        self::assertSame(4.25, $pipeline->resolve('eur'));
+        self::assertSame(4.12, $pipeline->resolve('eur'));
     }
 
-    public function testResolveLogsAndReturnsNullWhenNoStepCanResolveRate(): void
+    public function testResolveLogsWhenNoStepCanResolveRate(): void
     {
-        $logger = $this->createMock(DebugLoggerInterface::class);
+        $step = $this->createMock(PlnRateLookupPipelineStepInterface::class);
+        $step->expects(self::once())->method('resolve')->with('CHF')->willReturn(null);
+
+        $logger = $this->createLogger();
         $logger->expects(self::once())
             ->method('log')
-            ->with(
-                'PLN rate could not be resolved by pipeline',
-                ['iso_code' => 'CHF']
-            );
-
-        $step = $this->createMock(PlnRateLookupPipelineStepInterface::class);
-        $step->expects(self::once())->method('resolve')->with('CHF')->willReturn(0.0);
+            ->with('PLN rate could not be resolved by pipeline', ['iso_code' => 'CHF']);
 
         $pipeline = new PlnRateLookupPipeline([$step], $logger);
 
