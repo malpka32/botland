@@ -19,7 +19,7 @@ MODULE_VERSION="$(php -r '
       fwrite(STDERR, "Cannot read module file: {$path}\n");
       exit(1);
   }
-  if (!preg_match("/\\$this->version\\s*=\\s*'\''([^'\'']+)'\'';/", $content, $matches)) {
+  if (!preg_match("/version\\s*=\\s*'\''([^'\'']+)'\''\\s*;/", $content, $matches)) {
       fwrite(STDERR, "Cannot detect module version from {$path}\n");
       exit(1);
   }
