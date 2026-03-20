@@ -1,0 +1,10 @@
+FROM php:8.4-cli-bookworm
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl \
+    && curl -fsSL https://phar.phpunit.de/phpunit-11.phar -o /usr/local/bin/phpunit \
+    && chmod +x /usr/local/bin/phpunit \
+    && phpunit --version \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /var/www/html/modules/currencyrate

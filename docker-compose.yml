@@ -1,0 +1,67 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: botland-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-botland}
+      MYSQL_USER: ${MYSQL_USER:-ps}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ps}
+    ports:
+      - "${PORT_MYSQL:-3307}:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${MYSQL_USER:-ps} -p${MYSQL_PASSWORD:-ps} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  prestashop:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: botland-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_SERVER: db
+      DB_NAME: ${MYSQL_DATABASE:-botland}
+      DB_USER: ${MYSQL_USER:-ps}
+      DB_PASSWD: ${MYSQL_PASSWORD:-ps}
+      PS_INSTALL_AUTO: 1
+      PS_DOMAIN: ${PS_DOMAIN:-localhost}:${PORT_HTTP:-80}
+      PS_FOLDER_ADMIN: ${PS_FOLDER_ADMIN:-admin-dev}
+      PS_COUNTRY: ${PS_COUNTRY:-pl}
+      PS_LANGUAGE: ${PS_LANGUAGE:-pl}
+      PS_DEV_MODE: 1
+      ADMIN_FIRSTNAME: ${ADMIN_FIRSTNAME:-Admin}
+      ADMIN_LASTNAME: ${ADMIN_LASTNAME:-User}
+      ADMIN_MAIL: ${ADMIN_MAIL:-admin@prestashop.local}
+      ADMIN_PASSWD: ${ADMIN_PASSWD:-admin12345}
+    ports:
+      - "${PORT_HTTP:-80}:80"
+    volumes:
+      - prestashop_data:/var/www/html
+      - ./modules/currencyrate:/var/www/html/modules/currencyrate
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f ${PS_DOMAIN} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  tests:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.tests
+    profiles: ["tests"]
+    volumes:
+      - ./modules/currencyrate:/var/www/html/modules/currencyrate
+    working_dir: /var/www/html/modules/currencyrate
+    command: ["phpunit", "-c", "phpunit.xml.dist"]
+
+volumes:
+  db_data:
+  prestashop_data:

@@ -1,0 +1,7 @@
+currencyrate_admin_config:
+  path: /currencyrate/configuration
+  methods: [GET, POST]
+  defaults:
+    _controller: 'CurrencyRate\Controller\Admin\ConfigController::indexAction'
+    _legacy_controller: AdminCurrencyRateConfig
+    _legacy_link: AdminCurrencyRateConfig

@@ -1,0 +1,22 @@
+{
+  "name": "recruitment/currencyrate",
+  "description": "PrestaShop module for NBP currency rates and 30-day history.",
+  "type": "prestashop-module",
+  "license": "AFL-3.0",
+  "autoload": {
+    "psr-4": {
+      "CurrencyRate\\": "src/"
+    }
+  },
+  "scripts": {
+    "lint": "bash scripts/lint-php.sh",
+    "test": "phpunit -c phpunit.xml.dist",
+    "qa": [
+      "@lint",
+      "@test"
+    ]
+  },
+  "config": {
+    "sort-packages": true
+  }
+}

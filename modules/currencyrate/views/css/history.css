@@ -1,0 +1,76 @@
+.currencyrate-block {
+  margin-top: 1rem;
+}
+
+.currencyrate-title {
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.currencyrate-table th,
+.currencyrate-table td {
+  vertical-align: middle;
+}
+
+.currencyrate-filters-form .currencyrate-filter-actions button,
+.currencyrate-filters-form .currencyrate-filter-actions a {
+  width: 100%;
+}
+
+@media (max-width: 991.98px) {
+  .currencyrate-title {
+    font-size: 1.05rem;
+  }
+
+  .currencyrate-table {
+    font-size: 0.9rem;
+  }
+
+  .currencyrate-table thead {
+    display: none;
+  }
+
+  .currencyrate-table,
+  .currencyrate-table tbody,
+  .currencyrate-table tr,
+  .currencyrate-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .currencyrate-table tr {
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    background: #fff;
+  }
+
+  .currencyrate-table td {
+    border: 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.65rem 0.75rem;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .currencyrate-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .currencyrate-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #2f2f2f;
+    text-align: left;
+    flex: 0 0 48%;
+  }
+
+  .currencyrate-filters-form .currencyrate-filter-actions button,
+  .currencyrate-filters-form .currencyrate-filter-actions a {
+    margin-top: 1rem;
+  }
+}

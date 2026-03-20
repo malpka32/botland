@@ -1,0 +1,17 @@
+imports:
+  - { resource: '../services.yml' }
+
+services:
+  _defaults:
+    public: true
+    autoconfigure: false
+    autowire: true
+
+  # History listing (FO controller)
+  CurrencyRate\Application\History\RateHistoryReader: ~
+  CurrencyRate\Application\History\RateHistoryReaderInterface: '@CurrencyRate\Application\History\RateHistoryReader'
+  CurrencyRate\Application\History\HistoryRateRowCollectionMapper: ~
+  CurrencyRate\Application\History\HistoryViewProvider: ~
+
+  # Presentation mappers (FO templates)
+  CurrencyRate\Application\View\HistoryRateRowViewMapper: ~

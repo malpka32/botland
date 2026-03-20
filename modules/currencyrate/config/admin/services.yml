@@ -1,0 +1,13 @@
+imports:
+  - { resource: '../services.yml' }
+
+services:
+  _defaults:
+    public: true
+    autoconfigure: false
+    autowire: true
+
+  # Sync action from module configuration page (BO)
+  CurrencyRate\Controller\Admin\ConfigController: ~
+  CurrencyRate\Application\History\RateHistoryWriterInterface: '@CurrencyRate\Application\History\RateHistoryWriter'
+  CurrencyRate\Application\History\RateHistorySynchronizer: ~

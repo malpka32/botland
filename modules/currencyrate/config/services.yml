@@ -1,0 +1,65 @@
+services:
+  _defaults:
+    public: true
+    autowire: true
+
+  CurrencyRate\Infrastructure\Http\NbpHttpClient: ~
+  CurrencyRate\Infrastructure\Endpoint\LastTableEndpoint: ~
+  CurrencyRate\Infrastructure\Endpoint\TableRangeEndpoint: ~
+  CurrencyRate\Infrastructure\Endpoint\CurrencySeriesEndpoint: ~
+  CurrencyRate\Infrastructure\Mapper\NbpTableMapper: ~
+  CurrencyRate\Infrastructure\Mapper\NbpCurrencySeriesMapper: ~
+
+  CurrencyRate\Application\ExchangeRate\NbpApiGateway:
+    arguments:
+      - '@CurrencyRate\Infrastructure\Http\NbpHttpClient'
+      - '@CurrencyRate\Infrastructure\Endpoint\LastTableEndpoint'
+      - '@CurrencyRate\Infrastructure\Endpoint\TableRangeEndpoint'
+      - '@CurrencyRate\Infrastructure\Endpoint\CurrencySeriesEndpoint'
+      - '@CurrencyRate\Infrastructure\Mapper\NbpTableMapper'
+      - '@CurrencyRate\Infrastructure\Mapper\NbpCurrencySeriesMapper'
+
+  CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface: '@CurrencyRate\Application\ExchangeRate\NbpApiGateway'
+  currencyrate.nbp_rate_lookup_strategy.table_a:
+    class: CurrencyRate\Application\ExchangeRate\NbpTablePlnRateLookupStrategy
+    arguments:
+      - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
+      - 'A'
+
+  currencyrate.nbp_rate_lookup_strategy.table_b:
+    class: CurrencyRate\Application\ExchangeRate\NbpTablePlnRateLookupStrategy
+    arguments:
+      - '@CurrencyRate\Application\ExchangeRate\ExchangeRateGatewayInterface'
+      - 'B'
+
+  currencyrate.nbp_rate_lookup_strategy.fallback:
+    class: CurrencyRate\Application\ExchangeRate\FallbackPlnRateLookupStrategy
+    arguments:
+      - '@currencyrate.nbp_rate_lookup_strategy.table_a'
+      - '@currencyrate.nbp_rate_lookup_strategy.table_b'
+
+  CurrencyRate\Application\ExchangeRate\PlnRateLookupStrategyInterface: '@currencyrate.nbp_rate_lookup_strategy.fallback'
+
+  CurrencyRate\Application\ExchangeRate\NbpExchangeRateCalculator:
+    arguments:
+      - '@CurrencyRate\Application\ExchangeRate\PlnRateLookupStrategyInterface'
+
+  # Shared application services required by history sync
+  CurrencyRate\Application\ClockInterface: '@CurrencyRate\Application\SystemClock'
+  CurrencyRate\Application\SystemClock: ~
+  CurrencyRate\Application\CurrencyProviderInterface: '@CurrencyRate\Application\ShopCurrencyProvider'
+  CurrencyRate\Application\ShopCurrencyProvider: ~
+  CurrencyRate\Application\CurrencyNameResolver: ~
+  CurrencyRate\Application\CurrencyDisplayNameByIsoResolver: ~
+
+  CurrencyRate\Application\History\RateHistoryWriter: ~
+  CurrencyRate\Application\ExchangeRate\CurrencyRateUpdater: ~
+
+  prestashop.core.exchange_rate.provider:
+    class: CurrencyRate\PrestaShop\Core\Currency\NbpExchangeRateProvider
+    arguments:
+      - !php/const \PrestaShop\PrestaShop\Core\Currency\ExchangeRateProvider::CURRENCY_FEED_URL
+      - '@=service("prestashop.adapter.data_provider.currency").getDefaultCurrencyIsoCode()'
+      - '@?prestashop.core.currency.exchange_rate.circuit_breaker'
+      - '@?cache.app'
+      - '@CurrencyRate\Application\ExchangeRate\NbpExchangeRateCalculator'

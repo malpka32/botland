@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="views/templates" source-language="en-US" target-language="pl-PL" datatype="plaintext">
+    <body>
+      <trans-unit id="ceea13eeb241cf7ce9ec9f16a24ad2ea">
+        <source>Product price in available currencies</source>
+        <target>Cena produktu w dostępnych walutach</target>
+      </trans-unit>
+      <trans-unit id="b2f40690858b404ed10e62bdf422c704">
+        <source>Currency</source>
+        <target>Waluta</target>
+      </trans-unit>
+      <trans-unit id="3601146c4e948c32b6424d2c0a7f0118">
+        <source>Price</source>
+        <target>Cena</target>
+      </trans-unit>
+      <trans-unit id="f4c4c8576da5ec20c596ddbd5d3073cc">
+        <source>Currency rates history - last 30 days</source>
+        <target>Historia kursów walut - ostatnie 30 dni</target>
+      </trans-unit>
+      <trans-unit id="4c2a8fe7eaf24721cc7a9f0175115bd4">
+        <source>Date from</source>
+        <target>Data od</target>
+      </trans-unit>
+      <trans-unit id="5e5ecc8c2d39132f9f0e3670c5f5f777">
+        <source>Date to</source>
+        <target>Data do</target>
+      </trans-unit>
+      <trans-unit id="7fb55ed0b7a30342ba6da306428cae04">
+        <source>All</source>
+        <target>Wszystkie</target>
+      </trans-unit>
+      <trans-unit id="f4f70727dc34561dfde1a3c529b6205c">
+        <source>Filter</source>
+        <target>Filtruj</target>
+      </trans-unit>
+      <trans-unit id="526d688f37a86d3c3f27d0c5016eb71d">
+        <source>Reset</source>
+        <target>Resetuj</target>
+      </trans-unit>
+      <trans-unit id="44749712dbec183e983dcd78a7736c41">
+        <source>Date</source>
+        <target>Data</target>
+      </trans-unit>
+      <trans-unit id="ca0dbad92a874b2f69b549293387925e">
+        <source>Code</source>
+        <target>Kod</target>
+      </trans-unit>
+      <trans-unit id="789a89f249d6251f0355260fd8380d96">
+        <source>NBP mid rate (PLN)</source>
+        <target>Średni kurs NBP (PLN)</target>
+      </trans-unit>
+      <trans-unit id="c40f4ddf43640f77274395bc9987ac73">
+        <source>No historical rates found. Use module configuration button to import last 30 days.</source>
+        <target>Nie znaleziono historycznych kursów. Użyj przycisku w konfiguracji modułu, aby zaimportować ostatnie 30 dni.</target>
+      </trans-unit>
+      <trans-unit id="cf0fb52f5d44cd5d598af3ad0cfd4bd7">
+        <source>View exchange rates history</source>
+        <target>Zobacz historię kursów walut</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

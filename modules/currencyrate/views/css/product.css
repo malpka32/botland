@@ -1,0 +1,27 @@
+.currencyrate-block {
+  margin-top: 1rem;
+}
+
+.currencyrate-title {
+  margin-bottom: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.currencyrate-table th,
+.currencyrate-table td {
+  vertical-align: middle;
+}
+
+.currencyrate-history-link {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 991.98px) {
+  .currencyrate-title {
+    font-size: 1.05rem;
+  }
+
+  .currencyrate-table {
+    font-size: 0.9rem;
+  }
+}

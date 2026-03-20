@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="currencyrate.php" source-language="en-US" target-language="en-US" datatype="plaintext">
+    <body>
+      <trans-unit id="122eb0e4682201887f95ce5cc06fef5f">
+        <source>Currency Rate</source>
+        <target>Currency Rate</target>
+      </trans-unit>
+      <trans-unit id="e06c7ad4bbf52f211377cc95a2790381">
+        <source>Shows 30-day currency history and product prices converted by current rates from NBP.</source>
+        <target>Shows 30-day currency history and product prices converted by current rates from NBP.</target>
+      </trans-unit>
+      <trans-unit id="17edd57f91f0f34fc00bcc228ec2e447">
+        <source>Rates and history from last 30 days were synchronized.</source>
+        <target>Rates and history from last 30 days were synchronized.</target>
+      </trans-unit>
+      <trans-unit id="7976883f67abfc296ca3d6ca1c46576c">
+        <source>Could not synchronize rates. Check logs for details.</source>
+        <target>Could not synchronize rates. Check logs for details.</target>
+      </trans-unit>
+      <trans-unit id="2d7ae2a3a1f695d95f293abf2e1e11f1">
+        <source>Download rates from last 30 days</source>
+        <target>Download rates from last 30 days</target>
+      </trans-unit>
+      <trans-unit id="ea3dd5683d4bd5f03fd03f6f9cfab9d0">
+        <source>Settings saved.</source>
+        <target>Settings saved.</target>
+      </trans-unit>
+      <trans-unit id="8cf04a9734132302f96da8e113e80ce5">
+        <source>Debug logging</source>
+        <target>Debug logging</target>
+      </trans-unit>
+      <trans-unit id="76e10695de8f29a72d514f3836f2c5f8">
+        <source>Enable detailed debug logs for NBP endpoints, cache usage and table reads/writes.</source>
+        <target>Enable detailed debug logs for NBP endpoints, cache usage and table reads/writes.</target>
+      </trans-unit>
+      <trans-unit id="d4dccb8ca2dac4e53c01bd9954755332">
+        <source>Save settings</source>
+        <target>Save settings</target>
+      </trans-unit>
+      <trans-unit id="df9e37dc439e6c24334334d1ee92efe2">
+        <source>Currency Rate module help</source>
+        <target>Currency Rate module help</target>
+      </trans-unit>
+      <trans-unit id="5a005b2ff58363e35a8056301b5579c5">
+        <source>This module works with standard PrestaShop currencies. To see full module behavior, add and enable currencies in your shop.</source>
+        <target>This module works with standard PrestaShop currencies. To see full module behavior, add and enable currencies in your shop.</target>
+      </trans-unit>
+      <trans-unit id="7bc8116680d98e7b3070d7ada42fc1df">
+        <source>Go to currencies list</source>
+        <target>Go to currencies list</target>
+      </trans-unit>
+      <trans-unit id="db6976ad4f6099ff818737873f225f62">
+        <source>To refresh exchange rates with the standard PrestaShop CRON mechanism, call the URL below periodically:</source>
+        <target>To refresh exchange rates with the standard PrestaShop CRON mechanism, call the URL below periodically:</target>
+      </trans-unit>
+      <trans-unit id="52396dafee59debc72b8fccab2acb4c5">
+        <source>Example command:</source>
+        <target>Example command:</target>
+      </trans-unit>
+      <trans-unit id="cbdccc75cbfb745f33dc57ced07a4267">
+        <source>Open PrestaShop documentation for CRON currency refresh</source>
+        <target>Open PrestaShop documentation for CRON currency refresh</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

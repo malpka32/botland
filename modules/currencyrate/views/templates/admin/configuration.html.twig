@@ -1,0 +1,150 @@
+{% extends '@PrestaShop/Admin/layout.html.twig' %}
+
+{% block content %}
+  <div id="currencyrate-help-modal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ 'Currency Rate module help'|trans({}, 'Modules.Currencyrate.Admin') }}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{{ 'Close'|trans({}, 'Admin.Actions') }}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>
+            {{ 'This module works with standard PrestaShop currencies. To see full module behavior, add and enable currencies in your shop.'|trans({}, 'Modules.Currencyrate.Admin') }}
+            <a href="{{ currencyrate_currencies_url }}" target="_blank" rel="noopener noreferrer">
+              {{ 'Go to currencies list'|trans({}, 'Modules.Currencyrate.Admin') }}
+            </a>
+          </p>
+          <p>
+            {{ 'To refresh exchange rates with the standard PrestaShop CRON mechanism, call the URL below periodically:'|trans({}, 'Modules.Currencyrate.Admin') }}
+          </p>
+          <div class="alert alert-info mb-3" role="alert">
+            <code>{{ currencyrate_cron_url }}</code>
+          </div>
+          <p class="mb-1">
+            {{ 'Example command:'|trans({}, 'Modules.Currencyrate.Admin') }}
+          </p>
+          <div class="alert alert-light mb-3" role="alert">
+            <code>{{ currencyrate_cron_example_command }}</code>
+          </div>
+          <p class="mb-0">
+            <a href="{{ currencyrate_cron_docs_url }}" target="_blank" rel="noopener noreferrer">
+              {{ 'Open PrestaShop documentation for CRON currency refresh'|trans({}, 'Modules.Currencyrate.Admin') }}
+            </a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-header">
+      <i class="material-icons">currency_exchange</i>
+      {{ 'Currency Rate'|trans({}, 'Modules.Currencyrate.Admin') }} - {{ 'Configuration'|trans({}, 'Admin.Global') }}
+    </h3>
+
+    <div class="card-body">
+      <p class="mb-3 text-muted">
+        {{ 'Manage module settings and trigger a manual synchronization of exchange rates history.'|trans({}, 'Modules.Currencyrate.Admin') }}
+      </p>
+
+      {% if currencyrate_sync_status == 'success' %}
+        <div class="alert alert-success" role="alert">
+          {{ 'Rates and history from last 30 days were synchronized.'|trans({}, 'Modules.Currencyrate.Admin') }}
+        </div>
+      {% elseif currencyrate_sync_status == 'error' %}
+        <div class="alert alert-danger" role="alert">
+          {{ 'Could not synchronize rates. Check logs for details.'|trans({}, 'Modules.Currencyrate.Admin') }}
+        </div>
+      {% endif %}
+
+      {% if currencyrate_settings_status == 'saved' %}
+        <div class="alert alert-success" role="alert">
+          {{ 'Settings saved.'|trans({}, 'Modules.Currencyrate.Admin') }}
+        </div>
+      {% endif %}
+
+      <div class="card mb-3">
+        <div class="card-header">
+          {{ 'Debug settings'|trans({}, 'Modules.Currencyrate.Admin') }}
+        </div>
+        <div class="card-body">
+          <form method="post">
+            <div class="form-group">
+              <label class="form-control-label">
+                {{ 'Debug logging'|trans({}, 'Modules.Currencyrate.Admin') }}
+              </label>
+              <div class="switch prestashop-switch fixed-width-lg">
+                <input
+                  id="currencyrate-debug-log-enabled-on"
+                  type="radio"
+                  name="currencyrate_debug_log_enabled"
+                  value="1"
+                  {% if currencyrate_debug_log_enabled %}checked{% endif %}
+                >
+                <label for="currencyrate-debug-log-enabled-on">{{ 'Yes'|trans({}, 'Admin.Global') }}</label>
+
+                <input
+                  id="currencyrate-debug-log-enabled-off"
+                  type="radio"
+                  name="currencyrate_debug_log_enabled"
+                  value="0"
+                  {% if not currencyrate_debug_log_enabled %}checked{% endif %}
+                >
+                <label for="currencyrate-debug-log-enabled-off">{{ 'No'|trans({}, 'Admin.Global') }}</label>
+                <a class="slide-button btn"></a>
+              </div>
+              <p class="help-block mb-0">
+                {{ 'Enable detailed debug logs for NBP endpoints, cache usage and table reads/writes.'|trans({}, 'Modules.Currencyrate.Admin') }}
+              </p>
+            </div>
+
+            <button class="btn btn-outline-primary" type="submit" name="submitCurrencyRateSettings">
+              {{ 'Save settings'|trans({}, 'Modules.Currencyrate.Admin') }}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          {{ 'Manual synchronization'|trans({}, 'Modules.Currencyrate.Admin') }}
+        </div>
+        <div class="card-body">
+          <p class="mb-3">
+            {{ 'Download and update currency rates history for the last 30 days.'|trans({}, 'Modules.Currencyrate.Admin') }}
+          </p>
+          <form method="post">
+            <button class="btn btn-primary" type="submit" name="submitCurrencyRateSync">
+              {{ 'Download rates from last 30 days'|trans({}, 'Modules.Currencyrate.Admin') }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block javascripts %}
+  {{ parent() }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      var helpButtons = document.querySelectorAll('.js-currencyrate-help');
+      if (!helpButtons.length) {
+        return;
+      }
+
+      helpButtons.forEach(function (button) {
+        button.addEventListener('click', function (event) {
+          event.preventDefault();
+
+          if (window.$ && typeof window.$.fn.modal === 'function') {
+            window.$('#currencyrate-help-modal').modal('show');
+          }
+        });
+      });
+    });
+  </script>
+{% endblock %}
